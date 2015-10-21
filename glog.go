@@ -407,8 +407,7 @@ func init() {
 	logging.stderrThreshold = errorLog
 
 	logging.setVState(0, nil, false)
-	// XXX TODO: add an setter
-	logging.formatter = NewTextFormatter(&logging)
+	logging.setFormatter(NewTextFormatter(&logging))
 	go logging.flushDaemon()
 }
 
@@ -515,6 +514,11 @@ func (l *loggingT) putBuffer(b *buffer) {
 	b.next = l.freeList
 	l.freeList = b
 	l.freeListMu.Unlock()
+}
+
+// call this method at begging
+func (l *loggingT) setFormatter(f Formatter) {
+	l.formatter = f
 }
 
 var timeNow = time.Now // Stubbed out for testing.
@@ -1110,4 +1114,8 @@ func Exitln(args ...interface{}) {
 func Exitf(format string, args ...interface{}) {
 	atomic.StoreUint32(&fatalNoStacks, 1)
 	logging.printf(fatalLog, format, args...)
+}
+
+func SetFormmater(f Formatter) {
+	logging.setFormatter(f)
 }
