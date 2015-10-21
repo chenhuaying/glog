@@ -410,8 +410,7 @@ func init() {
 	logging.stderrThreshold = errorLog
 
 	logging.setVState(0, nil, false)
-	//logging.setFormatter(NewdefaultFormatter(&logging))
-	logging.setFormatter(NewTextFormatter(&logging))
+	logging.setFormatter(NewdefaultFormatter(&logging))
 	go logging.flushDaemon()
 }
 
