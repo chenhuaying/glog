@@ -10,12 +10,12 @@ type Formatter interface {
 	formatHeader(s severity, file string, line int) *buffer
 }
 
-type textFormatter struct {
+type defaultFormatter struct {
 	logging *loggingT
 }
 
-func NewTextFormatter(l *loggingT) *textFormatter {
-	return &textFormatter{logging: l}
+func NewdefaultFormatter(l *loggingT) *defaultFormatter {
+	return &defaultFormatter{logging: l}
 }
 
 /*
@@ -35,7 +35,7 @@ where the fields are defined as follows:
 	line             The line number
 	msg              The user-supplied message
 */
-func (f *textFormatter) header(s severity, depth int) (*buffer, string, int) {
+func (f *defaultFormatter) header(s severity, depth int) (*buffer, string, int) {
 	_, file, line, ok := runtime.Caller(3 + depth)
 	if !ok {
 		file = "???"
@@ -50,7 +50,7 @@ func (f *textFormatter) header(s severity, depth int) (*buffer, string, int) {
 }
 
 // formatHeader formats a log header using the provided file name and line number.
-func (f *textFormatter) formatHeader(s severity, file string, line int) *buffer {
+func (f *defaultFormatter) formatHeader(s severity, file string, line int) *buffer {
 	now := timeNow()
 	if line < 0 {
 		line = 0 // not a real line number, but acceptable to someDigits
