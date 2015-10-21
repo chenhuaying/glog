@@ -973,6 +973,54 @@ func V(level Level) Verbose {
 	return Verbose(false)
 }
 
+// Debug is equivalent to the global Debug function, guarded by the value of v.
+// See the documentation of V for usage.
+func (v Verbose) Debug(args ...interface{}) {
+	if v {
+		logging.print(debugLog, args...)
+	}
+}
+
+// Debugln is equivalent to the global Debugln function, guarded by the value of v.
+// See the documentation of V for usage.
+func (v Verbose) Debugln(args ...interface{}) {
+	if v {
+		logging.println(debugLog, args...)
+	}
+}
+
+// Debugf is equivalent to the global Debugf function, guarded by the value of v.
+// See the documentation of V for usage.
+func (v Verbose) Debugf(format string, args ...interface{}) {
+	if v {
+		logging.printf(debugLog, format, args...)
+	}
+}
+
+// Debug logs to DEBUG log
+// Arguments are handled in the manner of fmt.Print; a newline is appended if missing.
+func Debug(args ...interface{}) {
+	logging.print(debugLog, args...)
+}
+
+// DebugDepth acts as Info but uses depth to determine which call frame to log.
+// DebugDepth(0, "msg") is the same as Info("msg").
+func DebugDepth(depth int, args ...interface{}) {
+	logging.printDepth(debugLog, depth, args...)
+}
+
+// Debugln logs to the Debug log.
+// Arguments are handled in the manner of fmt.Println; a newline is appended if missing.
+func Debugln(args ...interface{}) {
+	logging.println(debugLog, args...)
+}
+
+// Debugf logs to the Debug log.
+// Arguments are handled in the manner of fmt.Printf; a newline is appended if missing.
+func Debugf(format string, args ...interface{}) {
+	logging.printf(debugLog, format, args...)
+}
+
 // Info is equivalent to the global Info function, guarded by the value of v.
 // See the documentation of V for usage.
 func (v Verbose) Info(args ...interface{}) {
@@ -995,17 +1043,6 @@ func (v Verbose) Infof(format string, args ...interface{}) {
 	if v {
 		logging.printf(infoLog, format, args...)
 	}
-}
-
-func (v Verbose) Debug(args ...interface{}) {
-	if v {
-		logging.print(debugLog, args...)
-	}
-}
-
-// Debug logs to DEBUG log
-func Debug(args ...interface{}) {
-	logging.print(debugLog, args...)
 }
 
 // Info logs to the INFO log.
