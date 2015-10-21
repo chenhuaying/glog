@@ -114,6 +114,9 @@ var severityName = []string{
 	fatalLog:   "FATAL",
 }
 
+// And an flag to turn log header, default is false
+var needHeader = false
+
 // get returns the value of the severity.
 func (s *severity) get() severity {
 	return severity(atomic.LoadInt32((*int32)(s)))
@@ -779,12 +782,15 @@ func (sb *syncBuffer) rotateFile(now time.Time) error {
 
 	// Write header.
 	var buf bytes.Buffer
-	fmt.Fprintf(&buf, "Log file created at: %s\n", now.Format("2006/01/02 15:04:05"))
-	fmt.Fprintf(&buf, "Running on machine: %s\n", host)
-	fmt.Fprintf(&buf, "Binary: Built with %s %s for %s/%s\n", runtime.Compiler, runtime.Version(), runtime.GOOS, runtime.GOARCH)
-	fmt.Fprintf(&buf, "Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg\n")
-	n, err := sb.file.Write(buf.Bytes())
-	sb.nbytes += uint64(n)
+	if needHeader {
+		var n int
+		fmt.Fprintf(&buf, "Log file created at: %s\n", now.Format("2006/01/02 15:04:05"))
+		fmt.Fprintf(&buf, "Running on machine: %s\n", host)
+		fmt.Fprintf(&buf, "Binary: Built with %s %s for %s/%s\n", runtime.Compiler, runtime.Version(), runtime.GOOS, runtime.GOARCH)
+		fmt.Fprintf(&buf, "Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg\n")
+		n, err = sb.file.Write(buf.Bytes())
+		sb.nbytes += uint64(n)
+	}
 	return err
 }
 
@@ -1118,4 +1124,8 @@ func Exitf(format string, args ...interface{}) {
 
 func SetFormmater(f Formatter) {
 	logging.setFormatter(f)
+}
+
+func SetHeaderFlag(b bool) {
+	needHeader = b
 }
