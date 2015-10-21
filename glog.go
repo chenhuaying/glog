@@ -98,16 +98,18 @@ type severity int32 // sync/atomic int32
 // A message written to a high-severity log file is also written to each
 // lower-severity log file.
 const (
-	infoLog severity = iota
+	debugLog severity = iota
+	infoLog
 	warningLog
 	errorLog
 	fatalLog
-	numSeverity = 4
+	numSeverity = 5
 )
 
-const severityChar = "IWEF"
+const severityChar = "DIWEF"
 
 var severityName = []string{
+	debugLog:   "DEBUG",
 	infoLog:    "INFO",
 	warningLog: "WARNING",
 	errorLog:   "ERROR",
@@ -643,6 +645,9 @@ func (l *loggingT) output(s severity, buf *buffer, file string, line int, alsoTo
 			fallthrough
 		case infoLog:
 			l.file[infoLog].Write(data)
+			fallthrough
+		case debugLog:
+			l.file[debugLog].Write(data)
 		}
 	}
 	if s == fatalLog {
@@ -805,7 +810,7 @@ func (l *loggingT) createFiles(sev severity) error {
 	now := time.Now()
 	// Files are created in decreasing severity order, so as soon as we find one
 	// has already been created, we can stop.
-	for s := sev; s >= infoLog && l.file[s] == nil; s-- {
+	for s := sev; s >= debugLog && l.file[s] == nil; s-- {
 		sb := &syncBuffer{
 			logger: l,
 			sev:    s,
@@ -990,6 +995,17 @@ func (v Verbose) Infof(format string, args ...interface{}) {
 	if v {
 		logging.printf(infoLog, format, args...)
 	}
+}
+
+func (v Verbose) Debug(args ...interface{}) {
+	if v {
+		logging.print(debugLog, args...)
+	}
+}
+
+// Debug logs to DEBUG log
+func Debug(args ...interface{}) {
+	logging.print(debugLog, args...)
 }
 
 // Info logs to the INFO log.
