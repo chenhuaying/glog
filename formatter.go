@@ -10,7 +10,13 @@ type Formatter interface {
 	formatHeader(s severity, file string, line int) *buffer
 }
 
-type textFormatter struct{}
+type textFormatter struct {
+	logging *loggingT
+}
+
+func NewTextFormatter(l *loggingT) *textFormatter {
+	return &textFormatter{logging: l}
+}
 
 /*
 header formats a log header as defined by the C++ implementation.
@@ -29,7 +35,7 @@ where the fields are defined as follows:
 	line             The line number
 	msg              The user-supplied message
 */
-func (l *loggingT) header(s severity, depth int) (*buffer, string, int) {
+func (f *textFormatter) header(s severity, depth int) (*buffer, string, int) {
 	_, file, line, ok := runtime.Caller(3 + depth)
 	if !ok {
 		file = "???"
@@ -40,11 +46,11 @@ func (l *loggingT) header(s severity, depth int) (*buffer, string, int) {
 			file = file[slash+1:]
 		}
 	}
-	return l.formatHeader(s, file, line), file, line
+	return f.formatHeader(s, file, line), file, line
 }
 
 // formatHeader formats a log header using the provided file name and line number.
-func (l *loggingT) formatHeader(s severity, file string, line int) *buffer {
+func (f *textFormatter) formatHeader(s severity, file string, line int) *buffer {
 	now := timeNow()
 	if line < 0 {
 		line = 0 // not a real line number, but acceptable to someDigits
@@ -52,7 +58,7 @@ func (l *loggingT) formatHeader(s severity, file string, line int) *buffer {
 	if s > fatalLog {
 		s = infoLog // for safety.
 	}
-	buf := l.getBuffer()
+	buf := f.logging.getBuffer()
 
 	// Avoid Fprintf, for speed. The format is so simple that we can do it quickly by hand.
 	// It's worth about 3X. Fprintf is hard.

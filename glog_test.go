@@ -409,7 +409,7 @@ func TestLogBacktraceAt(t *testing.T) {
 
 func BenchmarkHeader(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		buf, _, _ := logging.header(infoLog, 0)
+		buf, _, _ := logging.formatter.header(infoLog, 0)
 		logging.putBuffer(buf)
 	}
 }

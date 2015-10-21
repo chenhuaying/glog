@@ -407,6 +407,8 @@ func init() {
 	logging.stderrThreshold = errorLog
 
 	logging.setVState(0, nil, false)
+	// XXX TODO: add an setter
+	logging.formatter = NewTextFormatter(&logging)
 	go logging.flushDaemon()
 }
 
@@ -453,6 +455,7 @@ type loggingT struct {
 	// safely using atomic.LoadInt32.
 	vmodule   moduleSpec // The state of the -vmodule flag.
 	verbosity Level      // V logging level, the value of the -v flag/
+	// add formatter interface
 	formatter Formatter
 }
 
@@ -558,7 +561,7 @@ func (buf *buffer) someDigits(i, d int) int {
 }
 
 func (l *loggingT) println(s severity, args ...interface{}) {
-	buf, file, line := l.header(s, 0)
+	buf, file, line := l.formatter.header(s, 0)
 	fmt.Fprintln(buf, args...)
 	l.output(s, buf, file, line, false)
 }
@@ -568,7 +571,7 @@ func (l *loggingT) print(s severity, args ...interface{}) {
 }
 
 func (l *loggingT) printDepth(s severity, depth int, args ...interface{}) {
-	buf, file, line := l.header(s, depth)
+	buf, file, line := l.formatter.header(s, depth)
 	fmt.Fprint(buf, args...)
 	if buf.Bytes()[buf.Len()-1] != '\n' {
 		buf.WriteByte('\n')
@@ -577,7 +580,7 @@ func (l *loggingT) printDepth(s severity, depth int, args ...interface{}) {
 }
 
 func (l *loggingT) printf(s severity, format string, args ...interface{}) {
-	buf, file, line := l.header(s, 0)
+	buf, file, line := l.formatter.header(s, 0)
 	fmt.Fprintf(buf, format, args...)
 	if buf.Bytes()[buf.Len()-1] != '\n' {
 		buf.WriteByte('\n')
@@ -589,7 +592,7 @@ func (l *loggingT) printf(s severity, format string, args ...interface{}) {
 // alsoLogToStderr is true, the log message always appears on standard error; it
 // will also appear in the log file unless --logtostderr is set.
 func (l *loggingT) printWithFileLine(s severity, file string, line int, alsoToStderr bool, args ...interface{}) {
-	buf := l.formatHeader(s, file, line)
+	buf := l.formatter.formatHeader(s, file, line)
 	fmt.Fprint(buf, args...)
 	if buf.Bytes()[buf.Len()-1] != '\n' {
 		buf.WriteByte('\n')
