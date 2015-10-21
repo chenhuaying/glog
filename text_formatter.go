@@ -1,7 +1,6 @@
 package glog
 
 import (
-	"fmt"
 	"runtime"
 	"strings"
 )
@@ -26,6 +25,7 @@ Log lines have this form:
 	Lmmdd hh:mm:ss.uuuuuu threadid file:line] msg...
 where the fields are defined as follows:
 	L                A single character, representing the log level (eg 'I' for INFO)
+	yyyy						 The year
 	mm               The month (zero padded; ie May is '05')
 	dd               The day (zero padded)
 	hh:mm:ss.uuuuuu  Time in hours, minutes and fractional seconds
@@ -64,29 +64,31 @@ func (f *textFormatter) formatHeader(s severity, file string, line int) *buffer 
 	year, month, day := now.Date()
 	hour, minute, second := now.Clock()
 	// L YYYY-mm-dd hh:mm:ss threadid file:line]
-	header := fmt.Sprintf("%c %d-%02d-%02d %02d:%02d:%02d %d %s:%d ",
-		severityChar[s], year, month, day, hour, minute, second, pid, file, line)
-	buf.Write([]byte(header))
-	//buf.tmp[0] = severityChar[s]
-	//buf.twoDigits(1, int(month))
-	//buf.twoDigits(3, day)
-	//buf.tmp[5] = ' '
-	//buf.twoDigits(6, hour)
-	//buf.tmp[8] = ':'
-	//buf.twoDigits(9, minute)
-	//buf.tmp[11] = ':'
-	//buf.twoDigits(12, second)
-	//buf.tmp[14] = '.'
-	//buf.nDigits(6, 15, now.Nanosecond()/1000, '0')
-	//buf.tmp[21] = ' '
-	//buf.nDigits(7, 22, pid, ' ') // TODO: should be TID
-	//buf.tmp[29] = ' '
-	//buf.Write(buf.tmp[:30])
-	//buf.WriteString(file)
-	//buf.tmp[0] = ':'
-	//n := buf.someDigits(1, line)
-	//buf.tmp[n+1] = ']'
-	//buf.tmp[n+2] = ' '
-	//buf.Write(buf.tmp[:n+3])
+	//header := fmt.Sprintf("%c %d-%02d-%02d %02d:%02d:%02d %d %s:%d ",
+	//	severityChar[s], year, month, day, hour, minute, second, pid, file, line)
+	//buf.Write([]byte(header))
+	buf.tmp[0] = severityChar[s]
+	buf.tmp[1] = ' '
+	buf.nDigits(4, 2, year, '0')
+	buf.tmp[6] = '-'
+	buf.twoDigits(7, int(month))
+	buf.tmp[9] = '-'
+	buf.twoDigits(10, day)
+	buf.tmp[12] = ' '
+	buf.twoDigits(13, hour)
+	buf.tmp[15] = ':'
+	buf.twoDigits(16, minute)
+	buf.tmp[18] = ':'
+	buf.twoDigits(19, second)
+	buf.tmp[21] = ' '
+	buf.nDigits(7, 22, pid, ' ') // TODO: should be TID
+	buf.tmp[29] = ' '
+	buf.Write(buf.tmp[:30])
+	buf.WriteString(file)
+	buf.tmp[0] = ':'
+	n := buf.someDigits(1, line)
+	buf.tmp[n+1] = ']'
+	buf.tmp[n+2] = ' '
+	buf.Write(buf.tmp[:n+3])
 	return buf
 }
