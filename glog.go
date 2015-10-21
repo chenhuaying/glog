@@ -410,7 +410,8 @@ func init() {
 	logging.stderrThreshold = errorLog
 
 	logging.setVState(0, nil, false)
-	logging.setFormatter(NewdefaultFormatter(&logging))
+	//logging.setFormatter(NewdefaultFormatter(&logging))
+	logging.setFormatter(NewTextFormatter(&logging))
 	go logging.flushDaemon()
 }
 
@@ -1128,4 +1129,13 @@ func SetFormmater(f Formatter) {
 
 func SetHeaderFlag(b bool) {
 	needHeader = b
+}
+
+func ShowLoggingInfo() {
+	fmt.Println("verbosity>>>>>>>>>>>>>>>>>:", logging.verbosity)
+	fmt.Println("vmodule>>>>>>>>>>>>>>>>>:", logging.vmodule)
+	fmt.Println("pcs>>>>>>>>>>>>>>>>>>:", logging.pcs)
+	fmt.Println("toStderr>>>>>>>>>>>>:", logging.toStderr)
+	fmt.Println("alsotoStderr>>>>>>>>>>>>:", logging.alsoToStderr)
+	fmt.Println("stderrThreshold>>>>>>>>:", logging.stderrThreshold)
 }
