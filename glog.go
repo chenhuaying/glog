@@ -1176,6 +1176,18 @@ func Exitf(format string, args ...interface{}) {
 	logging.printf(fatalLog, format, args...)
 }
 
+func VLOG(v Level, args ...interface{}) {
+	V(v).Debug(args)
+}
+
+func VLOGF(v Level, format string, args ...interface{}) {
+	V(v).Debugf(format, args)
+}
+
+func VLOGLN(v Level, args ...interface{}) {
+	V(v).Debugln(args)
+}
+
 func SetFormmater(f Formatter) {
 	logging.setFormatter(f)
 }
