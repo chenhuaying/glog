@@ -1200,8 +1200,12 @@ func VLOGLN(v Level, args ...interface{}) {
 	V(v).Debugln(args)
 }
 
-func SetFormmater(f Formatter) {
+func SetFormatter(f Formatter) {
 	logging.setFormatter(f)
+}
+
+func SetTextFormatter() {
+	logging.setFormatter(NewTextFormatter(&logging))
 }
 
 func SetHeaderFlag(b bool) {
