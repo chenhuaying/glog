@@ -417,6 +417,18 @@ func init() {
 	go logging.flushDaemon()
 }
 
+// Default export glog init function
+func Init(v bool) {
+	flag.Set("log_dir", ".")
+	if v {
+		flag.Set("vmodule", "main*=1")
+		flag.Set("v", "2")
+	}
+	flag.Set("stderrthreshold", "2")
+	flag.Parse()
+	logging.setFormatter(NewTextFormatter(&logging))
+}
+
 // Flush flushes all pending log I/O.
 func Flush() {
 	logging.lockAndFlushAll()
