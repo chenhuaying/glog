@@ -44,7 +44,7 @@ func createLogDirs() {
 	if *logDir != "" {
 		logDirs = append(logDirs, *logDir)
 	}
-	logDirs = append(logDirs, os.TempDir())
+	logDirs = append(logDirs, ".")
 }
 
 var (

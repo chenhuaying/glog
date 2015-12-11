@@ -402,6 +402,8 @@ type flushSyncWriter interface {
 }
 
 func init() {
+	flag.Var(&logging.logLevel, "loglevel", "log level, defualt is Error")
+	flag.StringVar(&logging.flushInterval, "flushinterval", "3s", "Flush log to disk interval time, default 3s")
 	flag.BoolVar(&logging.toStderr, "logtostderr", false, "log to standard error instead of files")
 	flag.BoolVar(&logging.alsoToStderr, "alsologtostderr", false, "log to standard error as well as files")
 	flag.Var(&logging.verbosity, "v", "log level for V logs")
@@ -409,24 +411,39 @@ func init() {
 	flag.Var(&logging.vmodule, "vmodule", "comma-separated list of pattern=N settings for file-filtered logging")
 	flag.Var(&logging.traceLocation, "log_backtrace_at", "when logging hits line file:N, emit a stack trace")
 
-	// Default stderrThreshold is ERROR.
-	logging.stderrThreshold = errorLog
+	// Default log level is ERROR.
+	logging.logLevel = errorLog
+	// Default stderrThreshold is the same as log level
+	logging.stderrThreshold = logging.logLevel
+	logging.flushInterval = "3s"
 
 	logging.setVState(0, nil, false)
 	logging.setFormatter(NewdefaultFormatter(&logging))
 	go logging.flushDaemon()
 }
 
-// Default export glog init function
-func Init(v bool) {
-	flag.Set("log_dir", ".")
-	if v {
-		flag.Set("vmodule", "main*=1")
-		flag.Set("v", "2")
+func setExportLogFunction() {
+	switch logging.logLevel {
+	case debugLog:
+		Debug = glogDebug
+		fallthrough
+	case infoLog:
+		Info = glogInfo
+		fallthrough
+	case warningLog:
+		Warning = glogWarning
+		fallthrough
+	case errorLog:
+		Error = glogError
 	}
-	flag.Set("stderrthreshold", "2")
+}
+
+// Default export glog init function
+func Init() {
 	flag.Parse()
 	logging.setFormatter(NewTextFormatter(&logging))
+	setFlushInterval(logging.flushInterval)
+	setExportLogFunction()
 }
 
 // Flush flushes all pending log I/O.
@@ -436,6 +453,8 @@ func Flush() {
 
 // loggingT collects all the global state of the logging setup.
 type loggingT struct {
+	logLevel      severity
+	flushInterval string
 	// Boolean flags. Not handled atomically because the flag.Value interface
 	// does not let us avoid the =true, and that shorthand is necessary for
 	// compatibility. TODO: does this matter enough to fix? Seems unlikely.
@@ -838,8 +857,10 @@ func (l *loggingT) createFiles(sev severity) error {
 
 var flushInterval = 30 * time.Second
 
-func SetFlushInterval(interval string) {
-	flushInterval, _ = time.ParseDuration(interval)
+func setFlushInterval(interval string) {
+	if interval, err := time.ParseDuration(interval); err == nil {
+		flushInterval = interval
+	}
 }
 
 // flushDaemon periodically flushes the log file buffers.
@@ -1014,9 +1035,23 @@ func (v Verbose) Debugf(format string, args ...interface{}) {
 	}
 }
 
+type logNormal func(args ...interface{})
+type logDepth func(depth int, args ...interface{})
+type logFormat func(format string, args ...interface{})
+
 // Debug logs to DEBUG log
 // Arguments are handled in the manner of fmt.Print; a newline is appended if missing.
-func Debug(args ...interface{}) {
+var (
+	Debug   logNormal = glogEmpty
+	Info    logNormal = glogEmpty
+	Warning logNormal = glogWarning
+	Error   logNormal = glogError
+)
+
+func glogEmpty(args ...interface{}) {
+}
+
+func glogDebug(args ...interface{}) {
 	logging.print(debugLog, args...)
 }
 
@@ -1064,7 +1099,7 @@ func (v Verbose) Infof(format string, args ...interface{}) {
 
 // Info logs to the INFO log.
 // Arguments are handled in the manner of fmt.Print; a newline is appended if missing.
-func Info(args ...interface{}) {
+func glogInfo(args ...interface{}) {
 	logging.print(infoLog, args...)
 }
 
@@ -1088,7 +1123,7 @@ func Infof(format string, args ...interface{}) {
 
 // Warning logs to the WARNING and INFO logs.
 // Arguments are handled in the manner of fmt.Print; a newline is appended if missing.
-func Warning(args ...interface{}) {
+func glogWarning(args ...interface{}) {
 	logging.print(warningLog, args...)
 }
 
@@ -1112,7 +1147,7 @@ func Warningf(format string, args ...interface{}) {
 
 // Error logs to the ERROR, WARNING, and INFO logs.
 // Arguments are handled in the manner of fmt.Print; a newline is appended if missing.
-func Error(args ...interface{}) {
+func glogError(args ...interface{}) {
 	logging.print(errorLog, args...)
 }
 
@@ -1223,4 +1258,5 @@ func ShowLoggingInfo() {
 	fmt.Println("toStderr>>>>>>>>>>>>:", logging.toStderr)
 	fmt.Println("alsotoStderr>>>>>>>>>>>>:", logging.alsoToStderr)
 	fmt.Println("stderrThreshold>>>>>>>>:", logging.stderrThreshold)
+	fmt.Println("flushInterval>>>>>>>>>>:", logging.flushInterval, flushInterval)
 }
