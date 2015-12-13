@@ -419,7 +419,6 @@ func init() {
 
 	logging.setVState(0, nil, false)
 	logging.setFormatter(NewdefaultFormatter(&logging))
-	go logging.flushDaemon()
 }
 
 func setExportLogFunction() {
@@ -444,6 +443,8 @@ func Init() {
 	logging.setFormatter(NewTextFormatter(&logging))
 	setFlushInterval(logging.flushInterval)
 	setExportLogFunction()
+
+	go logging.flushDaemon()
 }
 
 // Flush flushes all pending log I/O.
@@ -1044,7 +1045,7 @@ type logFormat func(format string, args ...interface{})
 var (
 	Debug   logNormal = glogEmpty
 	Info    logNormal = glogEmpty
-	Warning logNormal = glogWarning
+	Warning logNormal = glogEmpty
 	Error   logNormal = glogError
 )
 
