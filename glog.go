@@ -401,6 +401,19 @@ type flushSyncWriter interface {
 	io.Writer
 }
 
+// severity value for logLevel and consoleLevel:
+// debugLog:   "DEBUG"
+// infoLog:    "INFO"
+// warningLog: "WARNING"
+// errorLog:   "ERROR"
+// fatalLog:   "FATAL"
+
+type Options struct {
+	LogLevel      string
+	ConsoleLevel  string
+	FlushInterval string
+}
+
 func init() {
 	flag.Var(&logging.logLevel, "loglevel", "log level, default is Error")
 	flag.StringVar(&logging.flushInterval, "flushinterval", "3s", "Flush log to disk interval time, default 3s")
@@ -438,8 +451,15 @@ func setExportLogFunction() {
 }
 
 // Default export glog init function
-func Init() {
+func Init(options Options) {
+	logging.logLevel.Set(options.LogLevel)
+	logging.stderrThreshold.Set(options.ConsoleLevel)
+	if options.FlushInterval != "" {
+		logging.flushInterval = options.FlushInterval
+	}
+
 	flag.Parse()
+
 	logging.setFormatter(NewTextFormatter(&logging))
 	setFlushInterval(logging.flushInterval)
 	setExportLogFunction()
