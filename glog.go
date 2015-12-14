@@ -152,7 +152,7 @@ func (s *severity) Set(value string) error {
 		}
 		threshold = severity(v)
 	}
-	logging.stderrThreshold.set(threshold)
+	s.set(threshold)
 	return nil
 }
 
@@ -402,7 +402,7 @@ type flushSyncWriter interface {
 }
 
 func init() {
-	flag.Var(&logging.logLevel, "loglevel", "log level, defualt is Error")
+	flag.Var(&logging.logLevel, "loglevel", "log level, default is Error")
 	flag.StringVar(&logging.flushInterval, "flushinterval", "3s", "Flush log to disk interval time, default 3s")
 	flag.BoolVar(&logging.toStderr, "logtostderr", false, "log to standard error instead of files")
 	flag.BoolVar(&logging.alsoToStderr, "alsologtostderr", false, "log to standard error as well as files")
@@ -660,7 +660,7 @@ func (l *loggingT) output(s severity, buf *buffer, file string, line int, alsoTo
 		if alsoToStderr || l.alsoToStderr || s >= l.stderrThreshold.get() {
 			os.Stderr.Write(data)
 		}
-		if l.file[s] == nil {
+		if l.file[s] == nil && s >= l.logLevel {
 			if err := l.createFiles(s); err != nil {
 				os.Stderr.Write(data) // Make sure the message appears somewhere.
 				l.exit(err)
@@ -674,12 +674,21 @@ func (l *loggingT) output(s severity, buf *buffer, file string, line int, alsoTo
 			l.file[errorLog].Write(data)
 			fallthrough
 		case warningLog:
+			if l.logLevel > warningLog {
+				break
+			}
 			l.file[warningLog].Write(data)
 			fallthrough
 		case infoLog:
+			if l.logLevel > infoLog {
+				break
+			}
 			l.file[infoLog].Write(data)
 			fallthrough
 		case debugLog:
+			if l.logLevel > debugLog {
+				break
+			}
 			l.file[debugLog].Write(data)
 		}
 	}
@@ -843,7 +852,7 @@ func (l *loggingT) createFiles(sev severity) error {
 	now := time.Now()
 	// Files are created in decreasing severity order, so as soon as we find one
 	// has already been created, we can stop.
-	for s := sev; s >= debugLog && l.file[s] == nil; s-- {
+	for s := sev; s >= l.logLevel && l.file[s] == nil; s-- {
 		sb := &syncBuffer{
 			logger: l,
 			sev:    s,
@@ -1260,4 +1269,5 @@ func ShowLoggingInfo() {
 	fmt.Println("alsotoStderr>>>>>>>>>>>>:", logging.alsoToStderr)
 	fmt.Println("stderrThreshold>>>>>>>>:", logging.stderrThreshold)
 	fmt.Println("flushInterval>>>>>>>>>>:", logging.flushInterval, flushInterval)
+	fmt.Println("log level>>>>>>>>>>>>>>", logging.logLevel)
 }
