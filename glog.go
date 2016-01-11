@@ -438,15 +438,23 @@ func setExportLogFunction() {
 	switch logging.logLevel {
 	case debugLog:
 		Debug = glogDebug
+		Debugln = glogDebugln
+		Debugf = glogDebugf
 		fallthrough
 	case infoLog:
 		Info = glogInfo
+		Infoln = glogInfoln
+		Infof = glogInfof
 		fallthrough
 	case warningLog:
 		Warning = glogWarning
+		Warningln = glogWarningln
+		Warningf = glogWarningf
 		fallthrough
 	case errorLog:
 		Error = glogError
+		Errorln = glogErrorln
+		Errorf = glogErrorf
 	}
 }
 
@@ -1066,6 +1074,7 @@ func (v Verbose) Debugf(format string, args ...interface{}) {
 }
 
 type logNormal func(args ...interface{})
+type logNormalln func(args ...interface{})
 type logDepth func(depth int, args ...interface{})
 type logFormat func(format string, args ...interface{})
 
@@ -1078,7 +1087,27 @@ var (
 	Error   logNormal = glogError
 )
 
+var (
+	Debugf   logFormat = glogEmptyf
+	Infof    logFormat = glogEmptyf
+	Warningf logFormat = glogEmptyf
+	Errorf   logFormat = glogErrorf
+)
+
+var (
+	Debugln   logNormalln = glogEmptyln
+	Infoln    logNormalln = glogEmptyln
+	Warningln logNormalln = glogEmptyln
+	Errorln   logNormalln = glogErrorln
+)
+
 func glogEmpty(args ...interface{}) {
+}
+
+func glogEmptyln(args ...interface{}) {
+}
+
+func glogEmptyf(format string, args ...interface{}) {
 }
 
 func glogDebug(args ...interface{}) {
@@ -1093,13 +1122,13 @@ func DebugDepth(depth int, args ...interface{}) {
 
 // Debugln logs to the Debug log.
 // Arguments are handled in the manner of fmt.Println; a newline is appended if missing.
-func Debugln(args ...interface{}) {
+func glogDebugln(args ...interface{}) {
 	logging.println(debugLog, args...)
 }
 
 // Debugf logs to the Debug log.
 // Arguments are handled in the manner of fmt.Printf; a newline is appended if missing.
-func Debugf(format string, args ...interface{}) {
+func glogDebugf(format string, args ...interface{}) {
 	logging.printf(debugLog, format, args...)
 }
 
@@ -1141,13 +1170,13 @@ func InfoDepth(depth int, args ...interface{}) {
 
 // Infoln logs to the INFO log.
 // Arguments are handled in the manner of fmt.Println; a newline is appended if missing.
-func Infoln(args ...interface{}) {
+func glogInfoln(args ...interface{}) {
 	logging.println(infoLog, args...)
 }
 
 // Infof logs to the INFO log.
 // Arguments are handled in the manner of fmt.Printf; a newline is appended if missing.
-func Infof(format string, args ...interface{}) {
+func glogInfof(format string, args ...interface{}) {
 	logging.printf(infoLog, format, args...)
 }
 
@@ -1165,13 +1194,13 @@ func WarningDepth(depth int, args ...interface{}) {
 
 // Warningln logs to the WARNING and INFO logs.
 // Arguments are handled in the manner of fmt.Println; a newline is appended if missing.
-func Warningln(args ...interface{}) {
+func glogWarningln(args ...interface{}) {
 	logging.println(warningLog, args...)
 }
 
 // Warningf logs to the WARNING and INFO logs.
 // Arguments are handled in the manner of fmt.Printf; a newline is appended if missing.
-func Warningf(format string, args ...interface{}) {
+func glogWarningf(format string, args ...interface{}) {
 	logging.printf(warningLog, format, args...)
 }
 
@@ -1189,13 +1218,13 @@ func ErrorDepth(depth int, args ...interface{}) {
 
 // Errorln logs to the ERROR, WARNING, and INFO logs.
 // Arguments are handled in the manner of fmt.Println; a newline is appended if missing.
-func Errorln(args ...interface{}) {
+func glogErrorln(args ...interface{}) {
 	logging.println(errorLog, args...)
 }
 
 // Errorf logs to the ERROR, WARNING, and INFO logs.
 // Arguments are handled in the manner of fmt.Printf; a newline is appended if missing.
-func Errorf(format string, args ...interface{}) {
+func glogErrorf(format string, args ...interface{}) {
 	logging.printf(errorLog, format, args...)
 }
 
