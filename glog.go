@@ -412,6 +412,7 @@ type Options struct {
 	LogLevel      string
 	ConsoleLevel  string
 	FlushInterval string
+	LogDir        string
 }
 
 func init() {
@@ -462,6 +463,7 @@ func setExportLogFunction() {
 func Init(options Options) {
 	logging.logLevel.Set(options.LogLevel)
 	logging.stderrThreshold.Set(options.ConsoleLevel)
+	SetLogDir(&options.LogDir)
 	if options.FlushInterval != "" {
 		logging.flushInterval = options.FlushInterval
 	}
@@ -1308,6 +1310,10 @@ func SetTextFormatter() {
 
 func SetHeaderFlag(b bool) {
 	needHeader = b
+}
+
+func SetLogDir(dir *string) {
+	logDir = dir
 }
 
 func ShowLoggingInfo() {
